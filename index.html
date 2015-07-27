@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en" ng-app='sprintApp'>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Main - Home</title>
+
+		<link rel='stylesheet' href='system/templates/js/foundation-5.5.0/css/normalize.css'/><link rel='stylesheet' href='system/templates/js/foundation-5.5.0/css/foundation.css'/>
+		<link rel='stylesheet' href='system/templates/css/style.css'/>
+		<link rel='stylesheet' href='system/templates/js/jquery-ui-1.10.4.custom/css/smoothness/jquery-ui-1.10.4.custom.min.css'/>
+		
+		<script src='system/templates/js/foundation-5.5.0/js/vendor/jquery.js'></script>
+		<script src='system/templates/js/jquery-ui-1.10.4.custom/js/jquery-ui-1.10.4.custom.min.js'></script>      
+		<script type="text/javascript" src="system/templates/js/foundation-5.5.0/js/foundation.min.js"></script>
+		<script type="text/javascript">
+			var $ = jQuery;
+		</script>
+		<script src="angular.min.js"></script>
+		<script src="angular-drag-and-drop-lists.js"></script>
+		<script src="sprint.js"></script>
+		<link rel='stylesheet' href='sprint.css' />
+	</head>
+	
+	<body ng-controller="SprintController">
+		<div class="row-fluid body">
+		   <div class="row-fluid ">
+				<div data-id='1' class="sprint row"  >
+					<div class="headerblock" >	
+						<div class='small-8 columns' >
+							<div class="row" >
+								<div class='small-2 columns' >
+									<span class='small-1 columns trashwrap' >
+										<a href='#' class='button tiny' id='trashcan' >Trash</a>
+									</span>
+								</div>
+								<div class='small-10 columns' >
+									<!--div class='right datepickers' ><label for="sprintstartdate" >Start<input type='text' id='sprintstartdate'  class='datepicker' size='11' value='24/03/2015' /></label><label for="sprintenddate" >End<input type='text' id='sprintenddate' class='datepicker' size='11' value='30/03/2015' /></div-->
+									<h3 class="header" contenteditable ng-model="title"  >{{title}}</h3>
+									<div class='sprintusers row'><b><a href='#' class='addsprintuser button tiny'>+</a> Users</b><span ng-repeat="user in users" class='sprintuser' data-id='{{user.id}}'   >{{user.name}}</span></div>
+								</div>
+							</div>
+							<div class="sprintgoals row" >
+								<div ng-repeat="group in groups" class="small-12 columns" >
+									<div class='sprintgoal row' data-id='{{group.id}}' >
+										<b class='title small-2 columns' contenteditable ng-model="group.name" >{{group.name}}</b>
+										<span class='sprintgoaldescription small-10 columns'  contenteditable ng-model="group.description" >{{group.description}}</span>
+									</div>
+								</div>
+							</div>
+							 
+						</div>
+						
+						<div class='searchtasks small-4 columns'>
+							<!--a href='#' class='undosprintbutton button tiny' >Undo</a>
+							<a href='#' class='redosprintbutton button tiny' >Redo</a-->
+							<a href='#' class='resetsprintbutton button tiny' >New Sprint</a> 
+							<a href='#' class='loadsprintbutton button tiny' >Load Sprint</a>
+							<a href='#' class='nextsprintbutton button tiny' >Next Sprint</a>
+							<label class='right pollinglabel' for='polling'  >Polling <input dischecked="true" type='checkbox' id='polling' /></label>
+							<div class='storypoints' >
+								<span ng-repeat='pointValue in [0.5,1,2,3,5,8,13,21,50]' class='storypoint button tiny' dnd-draggable="{{pointValue}}" dnd-type="'storypoint'"  >{{pointValue}}</span>
+								<span class='totalstorypointswrap' ><b>Total</b> <span id='totalstorypoints'>0</span></span>
+								<span class='sprintviews'>
+									<a href='#' class='viewplanbutton button tiny' ng-click="planMode()" >Plan</a>
+									<a href='#' class='viewactbutton button tiny' ng-click="actMode()" >Act</a>
+									<a href='#' class='viewallbutton button tiny' ng-click="allMode()">All</a>
+								</span>
+							</div>
+						</div>
+					</div>
+				<div class="row" ><div class="small-12 columns divider" ></div></div>
+				<div class="sprintlists row" >
+					<div ng-repeat="(listKey, listDetails) in listTypes" ng-hide="listDetails.hidden"  class='sprintlist {{listKey}} small-4 large-2 columns end' data-id='{{listKey}}' 
+					dnd-list='droppedItem'   
+					dnd-drop="taskDroppedToList(item,listKey,droppedItem,event,index,type)"
+					dnd-allowed-types="activeSprintGroups()" 
+					>
+					<h3>{{listDetails.name}}</h3>
+					<ul ng-repeat="(groupId, groupedTasks) in lists[listKey]"  class='sprintgroup' data-id="{{groupId}}"  dnd-list='droppedItem'   dnd-drop="taskDroppedToGroup(item,listKey,groupId,droppedItem,event,index,type)" dnd-allowed-types="['sprintgroup_{{groupId}}']" >
+						<li><h3>{{groups[groupId].name}}</h3></li>
+						<li ng-repeat="task in groupedTasks  track by $index" 
+						data-id='{{task}}' class='sprintitem' 
+						style='position: relative;' 
+						dnd-draggable="task" dnd-type="'sprintgroup_{{groupId}}'" 
+						dnd-dragstart="dragStart(event)" 
+						dnd-moved="taskMoved(groupedTasks,$index,listKey,groupId)" 
+						dnd-copied="taskCopied()" 
+						dnd-list="droppedItem"
+						dnd-allowed-types="['storypoint']"
+						dnd-drop="droppedToItem(item,listKey,groupId,droppedItem,event,index,type)"
+						><div ng-hide="!(tasks[task].storyPoints>0)" class='taskstorypoints button tiny' style='float: left; clear: both;'   >{{tasks[task].storyPoints}}</div>
+						<div class='tasktitle' >{{tasks[task].name}}</div></li>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div id="sprintmodal" class="reveal-modal xlarge" data-reveal style="top: 30px !important;"></div>
+		
+		
+		</script>
+	</body>
+</html>
